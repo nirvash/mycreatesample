@@ -17,9 +17,10 @@ def get_args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-v', dest='input_dir')
 	parser.add_argument('-o', dest='output_filename')
+	parser.add_argument('-m', action='store_true', dest='mirror', default=False)
 	parser.add_argument('--show', action='store_true', dest='show', default=False)
 	args = parser.parse_args()
-	return (args.input_dir, args.output_filename, args.show)
+	return (args.input_dir, args.output_filename, args.show, args.mirror)
 	
 def writeVecHeader(outputfile, count):
     header = struct.pack('<iihh', count, width * height, 0, 0) # little endian: int, int, short, short
@@ -45,12 +46,14 @@ def crop(img):
         w = h
         img = img[0:h, x: x + w]
 
-def createsamples(input_dir, output_vec_file, show):
+def createsamples(input_dir, output_vec_file, show, mirror):
     if input_dir.endswith('/'):
         input_dir = input_dir[:-1]
         
     files = glob.glob('{0}/*.*'.format(input_dir))
     count = len(files)
+    if mirror:
+        count *= 2
     
     try:
         with open(output_vec_file, 'wb') as outputfile:
@@ -63,6 +66,9 @@ def createsamples(input_dir, output_vec_file, show):
                 
                 vec = cv2.resize(img, (width, height), interpolation = cv2.INTER_CUBIC)
                 writeVecSample(outputfile, vec)
+                if mirror:
+                    vec = cv2.flip(vec, 1) # Y axis
+                    writeVecSample(outputfile, vec)
 
                 if show:
                     cv2.imshow("img", vec)
@@ -75,13 +81,13 @@ def createsamples(input_dir, output_vec_file, show):
 
 
 if __name__ == '__main__':
-    input_dir, output_filename, show = get_args()
+    input_dir, output_filename, show, mirror = get_args()
     if not input_dir:
         sys.exit('requires a directory of input files. (-v input_dir)')
     if not output_filename:
         sys.exit('requires an output filename. (-o output_filename)')
     
     print("{0} -> {1}".format(input_dir, output_filename))
-    createsamples(input_dir, output_filename, show);
+    createsamples(input_dir, output_filename, show, mirror);
 
 
