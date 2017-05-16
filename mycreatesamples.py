@@ -33,7 +33,17 @@ def writeVecSample(outputfile, vec):
         for i in col:
             header = struct.pack('<h', i) # short
             outputfile.write(header)
-    
+
+def crop(img):
+    h, w = img.shape[:2]
+    if (h > w):
+        y = (h - w) / 2
+        h = w
+        img = img[y: y + h, 0:w]
+    else :
+        x = (w - h) / 2
+        w = h
+        img = img[0:h, x: x + w]
 
 def createsamples(input_dir, output_vec_file, show):
     if input_dir.endswith('/'):
@@ -49,7 +59,8 @@ def createsamples(input_dir, output_vec_file, show):
             for file in files:
                 print file
                 img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-                # h, w = img.shape[:2]
+                # img = crop(img)
+                
                 vec = cv2.resize(img, (width, height), interpolation = cv2.INTER_CUBIC)
                 writeVecSample(outputfile, vec)
 
